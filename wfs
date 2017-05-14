@@ -124,7 +124,17 @@ init_wfs () {
         for x in $TARGETS
         do
             log DEBUG "Adding static route for host $x"
-            route add -host "$x" gw "$PRIMARY_GW" >> /dev/null 2>&1
+            ROUTE_ADDED=-1
+            while [ $ROUTE_ADDED -ne "0" ]
+            do
+              route add -host "$x" gw "$PRIMARY_GW" >> /dev/null 2>&1
+              ROUTE_ADDED=$?
+              if [ $ROUTE_ADDED -ne "0" ]
+              then
+                log ERROR "failed to route add -host $x gw $PRIMARY_GW, retrying in $INTERVAL seconds"
+                sleep $INTERVAL
+              fi
+            done
         done
     fi
 }
